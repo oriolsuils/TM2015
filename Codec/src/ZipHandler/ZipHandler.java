@@ -1,5 +1,6 @@
 package ZipHandler;
 
+import GUI.Filters;
 import GUI.Visor;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
@@ -10,8 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Enumeration;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
@@ -68,6 +67,8 @@ public class ZipHandler {
             }
             images.add(image);
         }
+        new Filters().binarization(this.images.get(0), 150);
+        new Visor(this.images.get(0)).setVisible(true);
         try {
             zf.close();
         } catch (IOException ex) {

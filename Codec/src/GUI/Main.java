@@ -37,7 +37,7 @@ public class Main {
         zHandler.setInputZipName(parser.getInputZip());
         zHandler.setOutputZipName(parser.getOutputZip());
         zHandler.readZip(); 
-        zHandler.writeZip();
+        //zHandler.writeZip();
         /*Timer t = new Timer();
         t.scheduleAtFixedRate(new TimerTask() {
 
