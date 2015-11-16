@@ -29,4 +29,22 @@ public class Filters {
             }
         }
     }
+    
+    public void negative(BufferedImage image){
+        int r, g, b;
+        for(int i=0; i < image.getWidth(); i++){
+            for(int j=0; j < image.getHeight(); j++){
+                Color color = new Color(image.getRGB(i, j));
+                r = color.getRed();
+                g = color.getGreen();
+                b = color.getBlue();
+                image.setRGB(i, j, new Color(255-r, 255-g, 255-b).getRGB());
+                
+            }
+        }
+    }
+    
+    public void averaging(BufferedImage image, int size){
+        
+    }
 }

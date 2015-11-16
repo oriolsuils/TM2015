@@ -67,7 +67,7 @@ public class ZipHandler {
             }
             images.add(image);
         }
-        new Filters().binarization(this.images.get(0), 150);
+        new Filters().negative(this.images.get(0));
         new Visor(this.images.get(0)).setVisible(true);
         try {
             zf.close();

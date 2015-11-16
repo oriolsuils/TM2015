@@ -53,7 +53,7 @@ public class ArgParser {
     
     @Parameter(names = "--averaging",
             description = "The averaging filter")
-    private float averaging;
+    private int averaging;
     
     @Parameter(names = "--nTiles",
             description = "The averaging filter")
