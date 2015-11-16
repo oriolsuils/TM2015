@@ -6,6 +6,8 @@
 package GUI;
 
 import ZipHandler.ZipHandler;
+import com.beust.jcommander.JCommander;
+import com.beust.jcommander.ParameterException;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -16,13 +18,28 @@ import java.util.TimerTask;
 public class Main {
         
     public static void main(String[] args){
+        ArgParser parser = new ArgParser();
+        JCommander jComm = null;
+        try {
+            jComm = new JCommander(parser, args);
+            jComm.setProgramName("TM1516.jar");
+            if(parser.help) {
+                jComm.usage();
+            } else {
+                System.out.println("Debug mode: " + parser.getDebug());
+                System.out.println("Working with file: " + parser.getInputZip());
+            }
+        } catch (ParameterException pe){
+            System.err.println(pe.getMessage());
+            System.err.println("Try --help or -h for help.");
+        }
         ZipHandler zHandler = new ZipHandler();
-        zHandler.setInputZipName("./Cubo.zip");
-        zHandler.setOutputZipName("images_video.zip");
+        zHandler.setInputZipName(parser.getInputZip());
+        zHandler.setOutputZipName(parser.getOutputZip());
         zHandler.readZip(); 
         zHandler.writeZip();
-        Timer t = new Timer();
-        /*t.scheduleAtFixedRate(new TimerTask() {
+        /*Timer t = new Timer();
+        t.scheduleAtFixedRate(new TimerTask() {
 
             @Override
             public void run() {
