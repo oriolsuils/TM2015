@@ -5,11 +5,10 @@
  */
 package GUI;
 
+import Args.ArgParser;
 import ZipHandler.ZipHandler;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
-import java.util.Timer;
-import java.util.TimerTask;
 
 /**
  *
@@ -26,25 +25,15 @@ public class Main {
             if(parser.help) {
                 jComm.usage();
             } else {
-                System.out.println("Debug mode: " + parser.getDebug());
-                System.out.println("Working with file: " + parser.getInputZip());
-            }
+                if(parser.isDebug()) System.out.println("Debug mode: " + parser.isDebug());
+                if(parser.isDebug()) System.out.println("Working with file: " + parser.getInputZip());
+                Visor v = new Visor(parser.getFps(), parser.isDebug());
+                v.readAndSaveImages(parser.getInputZip(), parser.getOutputZip(), parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());
+                v.play(parser.isBatch());
+            } 
         } catch (ParameterException pe){
             System.err.println(pe.getMessage());
             System.err.println("Try --help or -h for help.");
         }
-        ZipHandler zHandler = new ZipHandler();
-        zHandler.setInputZipName(parser.getInputZip());
-        zHandler.setOutputZipName(parser.getOutputZip());
-        zHandler.readZip(); 
-        //zHandler.writeZip();
-        /*Timer t = new Timer();
-        t.scheduleAtFixedRate(new TimerTask() {
-
-            @Override
-            public void run() {
-                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-            }
-        }, null, period);*/
     }
 }

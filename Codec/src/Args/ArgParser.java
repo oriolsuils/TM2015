@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package GUI;
+package Args;
 
 import com.beust.jcommander.Parameter;
 
@@ -24,12 +24,12 @@ public class ArgParser {
     @Parameter(names = {"--input", "-i"},
             required = true,
             description = "Zip file with the input images",
-            validateWith = ZipFileExists.class)
+            validateWith = FileExists.class)
     private String inputZip;
     
     @Parameter(names = {"--output", "-o"},
             description = "Name of the file with the output images")
-    private String outputZip = "images_video.zip";
+    private String outputZip = "filtered_images.zip";
     
     @Parameter(names = {"--encode", "-e"},
             description = " ")
@@ -41,11 +41,11 @@ public class ArgParser {
     
     @Parameter(names = "--fps",
             description = "The number of frame per second")
-    private int fps;
+    private int fps = 40;
     
     @Parameter(names = "--binarization",
             description = "The binarization filter with the threshold")
-    private float binarization;
+    private float binarization = (float) -1.0;
     
     @Parameter(names = "--negative",
             description = "The negative filter")
@@ -53,7 +53,7 @@ public class ArgParser {
     
     @Parameter(names = "--averaging",
             description = "The averaging filter")
-    private int averaging;
+    private int averaging = -1;
     
     @Parameter(names = "--nTiles",
             description = "The averaging filter")
@@ -74,10 +74,6 @@ public class ArgParser {
     @Parameter(names = {"--batch", "-b"},
             description = " ")
     private boolean batch = false;
-    
-    public boolean getDebug() {
-        return debug;
-    }
 
     public String getInputZip() {
         return inputZip;

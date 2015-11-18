@@ -7,44 +7,57 @@ package GUI;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 
 /**
  *
  * @author osuilspe7.alumnes
  */
 public class Filters {
-    public void binarization(BufferedImage image, float threshold){
+    
+    public static BufferedImage binarization(BufferedImage image, float threshold){
         int r, g, b;
+        BufferedImage imageFiltered = new BufferedImage(image.getColorModel(), image.copyData(null), image.isAlphaPremultiplied(), null);
         for(int i=0; i < image.getWidth(); i++){
             for(int j=0; j < image.getHeight(); j++){
                 Color color = new Color(image.getRGB(i, j));
                 r = color.getRed();
                 g = color.getGreen();
                 b = color.getBlue();
-                if(r > threshold || g > threshold || b > threshold){
-                    image.setRGB(i, j, new Color(255, 255, 255).getRGB());
+                if((float) r > threshold ||(float) g > threshold ||(float) b > threshold){
+                    imageFiltered.setRGB(i, j, new Color(255, 255, 255).getRGB());
                 } else {
-                    image.setRGB(i, j, new Color(0, 0, 0).getRGB());
+                    imageFiltered.setRGB(i, j, new Color(0, 0, 0).getRGB());
                 }
             }
         }
+        return imageFiltered;
     }
     
-    public void negative(BufferedImage image){
+    public static BufferedImage negative(BufferedImage image){
         int r, g, b;
+        BufferedImage imageFiltered = new BufferedImage(image.getColorModel(), image.copyData(null), image.isAlphaPremultiplied(), null);
         for(int i=0; i < image.getWidth(); i++){
             for(int j=0; j < image.getHeight(); j++){
                 Color color = new Color(image.getRGB(i, j));
                 r = color.getRed();
                 g = color.getGreen();
                 b = color.getBlue();
-                image.setRGB(i, j, new Color(255-r, 255-g, 255-b).getRGB());
-                
+                imageFiltered.setRGB(i, j, new Color(255-r, 255-g, 255-b).getRGB());
             }
         }
+        return imageFiltered;
     }
     
-    public void averaging(BufferedImage image, int size){
-        
+    public static BufferedImage averaging(BufferedImage image, int size){
+        int numFilter = size*size;
+        float[] filter = new float[numFilter];
+        for(int i=0; i<numFilter; i++){
+            filter[i] = (float)1/(float)numFilter;
+        }
+        BufferedImageOp op = new ConvolveOp(new Kernel(size, size, filter));
+	return op.filter(image, null);
     }
 }

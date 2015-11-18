@@ -3,18 +3,17 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package GUI;
+package Args;
 
 import com.beust.jcommander.IParameterValidator;
 import com.beust.jcommander.ParameterException;
 import java.io.File;
-import java.util.zip.ZipFile;
 
 /**
  *
  * @author mat.aules
  */
-public class ZipFileExists implements IParameterValidator{
+public class FileExists implements IParameterValidator{
 
     @Override
     public void validate(String name, String value) {
