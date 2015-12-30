@@ -12,7 +12,7 @@ import java.util.ArrayList;
  *
  * @author Oriol
  */
-public class FPSCounter extends Thread{
+public class FPSCounter{
     private ArrayList<Long> times;
     
     public FPSCounter() {

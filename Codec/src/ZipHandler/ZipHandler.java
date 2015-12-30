@@ -1,7 +1,7 @@
 package ZipHandler;
 
+import Encoder.Encoder;
 import GUI.Filters;
-import GUI.Visor;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -15,12 +15,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
-
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 
 /**
  *
@@ -54,7 +48,7 @@ public class ZipHandler {
         Enumeration<? extends ZipEntry> entries = zf.entries();
         while(entries.hasMoreElements()){
             ZipEntry entry = entries.nextElement();
-            if(!validateExtension(entry.getName())) {
+            if(!validateImageExtension(entry.getName())) {
                 System.err.println("ERROR: There are at least one file in the ZIP that is not a JPEG, PNG, GIF or BMP file");
                 System.exit(0);
             }
@@ -98,7 +92,7 @@ public class ZipHandler {
         }
     }
     
-    public void writeZip(ArrayList<BufferedImage> images) {
+    private void writeZip(ArrayList<BufferedImage> images) {
         if(this.debug) System.out.print("Writing the ZIP...");
         initZip();
         for (BufferedImage image : images) {
@@ -116,7 +110,7 @@ public class ZipHandler {
         this.closeStream();
     } 
 
-    private boolean validateExtension(String name) {
+    private boolean validateImageExtension(String name) {
         String substring = name.substring(name.lastIndexOf(".")+1,name.length());
         return (substring.equalsIgnoreCase("png") || substring.equalsIgnoreCase("jpeg") || substring.equalsIgnoreCase("jpg") || substring.equalsIgnoreCase("gif") || substring.equalsIgnoreCase("bmp"));
     }
@@ -144,6 +138,12 @@ public class ZipHandler {
         } catch (IOException ex) {
             System.out.println("ERROR: There has been a problem while closing the connection");
         }
+    }
+
+    public ArrayList<BufferedImage> readAndSaveImages(String inputZip, String outputZip, float binarization, boolean negative, int averaging) {
+        ArrayList<BufferedImage> images = this.readZip(binarization, negative, averaging); 
+        this.writeZip(images);
+        return images;
     }
     
 }

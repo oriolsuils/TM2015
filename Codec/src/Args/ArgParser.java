@@ -56,8 +56,8 @@ public class ArgParser {
     private int averaging = -1;
     
     @Parameter(names = "--nTiles",
-            description = "The averaging filter")
-    private float nTiles;
+            description = "The number of tiles to divide the image")
+    private int nTiles;
     
     @Parameter(names = "--seekRange",
             description = "The averaging filter")
@@ -111,7 +111,7 @@ public class ArgParser {
         return averaging;
     }
 
-    public float getnTiles() {
+    public int getnTiles() {
         return nTiles;
     }
 
