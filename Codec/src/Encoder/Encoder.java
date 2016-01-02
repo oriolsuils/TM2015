@@ -90,10 +90,10 @@ public class Encoder {
         int j = id%size;
         int value = matrix[i][j];
         if(value == id){
-            for(int row=this.seekRange+1; row>-this.seekRange; row--){
-                for(int col=this.seekRange+1; col>-this.seekRange; col--){
+            for(int row=this.seekRange; row>-this.seekRange; row--){
+                for(int col=this.seekRange; col>-this.seekRange; col--){
                     int rowIdx = (i-row);
-                    int colIdx = (i-col);
+                    int colIdx = (j-col);
                     if(rowIdx<0){
                         if(colIdx<0) if(!positions.contains(matrix[0][0])) positions.add(matrix[0][0]);
                         else if(colIdx>(size*size)) if(!positions.contains(matrix[0][size-1])) positions.add(matrix[0][size-1]);
@@ -114,6 +114,7 @@ public class Encoder {
                 }
             }
         }
+        System.out.println("P: "+positions);
         return positions;
     }
     
