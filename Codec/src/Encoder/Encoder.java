@@ -3,6 +3,10 @@ package Encoder;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
+import java.util.Collections;
+import javax.swing.ImageIcon;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
 
 /**
  *
@@ -54,21 +58,25 @@ public class Encoder {
     }
 
     private void findCompatibleBlock(BufferedImage pFrame, ArrayList<BufferedImage> iFrame, int[][] matrix) {
-        ArrayList<Float> values = new ArrayList<>();
         for(int i=0; i<iFrame.size(); i++){
             ArrayList<Integer> positions = calculateRangePositions(matrix, i);
-            System.out.println("i-> " + i + " POS: " + positions);
+            float maxPSNR = Float.MIN_VALUE;
+            int id = -1;
             for(int pos : positions){
-                
-                //int tileWidth = pFrame.getWidth()/this.nTiles;
-                //int tileHeight = pFrame.getHeight()/this.nTiles;
-                //int i = (int) Math.ceil(pos/size);
-                //int j = pos%size; 
-                /*for(int i=0; i<pFrame.getWidth(); i+=tileWidth){
-                    for(int j=0; j<pFrame.getHeight(); j+=tileHeight){
-                        values.add(calculatePSNR(iframe, pFrame.getSubimage(i, j, tileWidth, tileHeight)));
-                    }
-                }*/
+                int tileWidth = pFrame.getWidth()/this.nTiles;
+                int tileHeight = pFrame.getHeight()/this.nTiles;
+                int x = (int) Math.ceil(pos/matrix.length);
+                int y = pos%matrix.length; 
+                //System.out.println("POS: " + pos + " X: " + x + " Y: " + y);
+                float psnr = calculatePSNR(iFrame.get(i), pFrame.getSubimage(x, y, tileWidth, tileHeight));
+                if(psnr > maxPSNR){
+                    maxPSNR = psnr;
+                    id = pos;
+                }
+            }
+            System.out.println("TESELA: " + i + " VALUE: " + maxPSNR + " ID: " + id);
+            if(maxPSNR >= this.quality){
+                //Eliminar tesela
             }
         }
     }
@@ -96,47 +104,21 @@ public class Encoder {
         int j = id%size;
         int value = matrix[i][j];
         if(value == id){
-            System.out.println("ID: " + id + " i : " + i + " j: " + j);
-            for(int row=this.seekRange; row>-this.seekRange; row--){
-                for(int col=this.seekRange; col>-this.seekRange; col--){
-                    System.out.println("row: " + row + " col: " + col);
-                    int rowIdx = (i-row);
-                    int colIdx = (j-col);
-                    /*int minRow = (i-row);
-                    int maxRow = (i+row);
-                    int minCol = (j-col);
-                    int maxCol = (j+col);
-                    if(minRow<0){
-                        if(minCol<0) if(!positions.contains(matrix[0][0])) positions.add(matrix[0][0]);
-                        else if(minCol>size) if(!positions.contains(matrix[0][size-1])) positions.add(matrix[0][size-1]);
-                        else if(!positions.contains(matrix[0][colIdx])) positions.add(matrix[0][colIdx]);
-                    }*/
-                    //System.out.println("MAXrow: " + maxRow + " MAXcol: " + maxCol);
-                    //System.out.println("MINrow: " + minRow + " MINcol: " + minCol);
-                    
-                    //System.out.println("ROW: " + rowIdx + " COL: " + colIdx);
-                    if(rowIdx<0){
-                        if(colIdx<0) if(!positions.contains(matrix[0][0])) positions.add(matrix[0][0]);
-                        else if(colIdx>(size)) if(!positions.contains(matrix[0][size-1])) positions.add(matrix[0][size-1]);
-                        else if(!positions.contains(matrix[0][colIdx])) positions.add(matrix[0][colIdx]);
-                    }else if(colIdx<0){
-                        if(rowIdx<0) if(!positions.contains(matrix[0][0])) positions.add(matrix[0][0]);
-                        else if(rowIdx>(size)) if(!positions.contains(matrix[size-1][0])) positions.add(matrix[size-1][0]);
-                        else if(!positions.contains(matrix[rowIdx][0])) positions.add(matrix[rowIdx][0]); 
-                    }else if(rowIdx>(size)){
-                        if(colIdx<0) if(!positions.contains(matrix[size-1][0])) positions.add(matrix[size-1][0]);
-                        else if(colIdx>(size)) if(!positions.contains(matrix[size-1][size-1])) positions.add(matrix[size-1][size-1]);
-                        else if(!positions.contains(matrix[size-1][colIdx])) positions.add(matrix[size-1][colIdx]);
-                    }else if(colIdx>(size)){
-                        if(rowIdx<0) if(!positions.contains(matrix[0][size-1])) positions.add(matrix[0][size-1]);
-                        else if(rowIdx>(size)) if(!positions.contains(matrix[size-1][size-1])) positions.add(matrix[size-1][size-1]);
-                        else if(!positions.contains(matrix[rowIdx][size-1])) positions.add(matrix[rowIdx][size-1]); 
-                    } else {
-                        if(!positions.contains(matrix[rowIdx][colIdx])) positions.add(matrix[rowIdx][colIdx]);
+            int minX = i-this.seekRange;
+            int maxX = i+this.seekRange;
+            int minY = j-this.seekRange;
+            int maxY = j+this.seekRange;
+            for(int row=minX; row<=maxX; row++){
+                if(row >= 0 && row < size){
+                    for(int col=minY; col<=maxY; col++){
+                        if(col >= 0 && col < size){
+                            if(!positions.contains(matrix[row][col])) positions.add(matrix[row][col]);
+                        }
                     }
                 }
             }
         }
+        Collections.sort(positions);
         return positions;
     }
     
