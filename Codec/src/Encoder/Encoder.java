@@ -29,108 +29,111 @@ public class Encoder {
     }
     
     public void encode(){
-        ArrayList<BufferedImage> iFrame = null;
+        ArrayList<Tesela> iFrame = null;
         int gopCount = this.gop;
-        int[][] matrix = generateMatrix();
         for (BufferedImage frame : raw_images) {
             if(gopCount == this.gop){ //Es pren la referencia (I-Frame) i es generen les teseles
                 iFrame = generateMacroblocks(frame);
             }else{
-                ArrayList<Integer> positions = calculateRangePositions(matrix, 11);
-                findCompatibleBlock(frame, iFrame, matrix);
-                break;
+                findCompatibleBlock(frame, iFrame);
             }
             gopCount--;
             if(gopCount == 0) gopCount = this.gop;
         }
     }
     
-    public ArrayList<BufferedImage> generateMacroblocks(BufferedImage image){
-        ArrayList<BufferedImage> blocks = new ArrayList<>();
+    public ArrayList<Tesela> generateMacroblocks(BufferedImage image){
+        ArrayList<Tesela> teseles = new ArrayList<>();
         int tileWidth = image.getWidth()/this.nTiles;
         int tileHeight = image.getHeight()/this.nTiles;
-        for(int i=0; i<image.getWidth(); i+=tileWidth){
-            for(int j=0; j<image.getHeight(); j+=tileHeight){
-                blocks.add(image.getSubimage(i, j, tileWidth, tileHeight));
+        Tesela t;
+        int count = 0;
+        for(int x=0; x<image.getWidth(); x+=tileWidth){
+            for(int y=0; y<image.getHeight(); y+=tileHeight){
+                t = new Tesela(image.getSubimage(x, y, tileWidth, tileHeight), count);
+                teseles.add(t);
+                count++;
             }
         }
-        return blocks;
+        return teseles;
     }
 
-    private void findCompatibleBlock(BufferedImage pFrame, ArrayList<BufferedImage> iFrame, int[][] matrix) {
-        for(int i=0; i<iFrame.size(); i++){
-            ArrayList<Integer> positions = calculateRangePositions(matrix, i);
+    private void findCompatibleBlock(BufferedImage pFrame, ArrayList<Tesela> iFrame) {
+        this.seekRange = 3;
+        for (Tesela t : iFrame) {
             float maxPSNR = Float.MIN_VALUE;
-            int id = -1;
-            for(int pos : positions){
-                int tileWidth = pFrame.getWidth()/this.nTiles;
-                int tileHeight = pFrame.getHeight()/this.nTiles;
-                int x = (int) Math.ceil(pos/matrix.length);
-                int y = pos%matrix.length; 
-                //System.out.println("POS: " + pos + " X: " + x + " Y: " + y);
-                float psnr = calculatePSNR(iFrame.get(i), pFrame.getSubimage(x, y, tileWidth, tileHeight));
-                if(psnr > maxPSNR){
-                    maxPSNR = psnr;
-                    id = pos;
+            int xMaxValue = 0, yMaxValue = 0;
+            int tileWidth = pFrame.getWidth()/this.nTiles;
+            int tileHeight = pFrame.getHeight()/this.nTiles;
+            int xOriginal = (int) Math.ceil(t.getIdOriginal()/this.nTiles);            
+            int yOriginal = t.getIdOriginal()%this.nTiles;
+            int xMin = xOriginal - (this.seekRange); 
+            int xMax = xOriginal + ((this.seekRange+1)); 
+            int yMin = yOriginal - (this.seekRange); 
+            int yMax = yOriginal + ((this.seekRange+1)); 
+            if(xMin < 0) xMin = 0;
+            if(yMin < 0) yMin = 0;
+            if(xMax > this.nTiles) xMax = this.nTiles;
+            if(yMax > this.nTiles) yMax = this.nTiles;
+            xMin *= tileWidth;
+            xMax *= tileWidth;
+            yMin *= tileHeight;
+            yMax *= tileHeight;
+            for(int x=xMin; x<(xMax-tileWidth); x++){
+                for(int y=yMin; y<(yMax-tileHeight); y++){
+                    float psnr = calculatePSNR(t, pFrame.getSubimage(x, y, tileWidth, tileHeight));
+                    if(psnr > maxPSNR){
+                        maxPSNR = psnr;
+                        xMaxValue = x;
+                        yMaxValue = y;
+                    }
                 }
             }
-            System.out.println("TESELA: " + i + " VALUE: " + maxPSNR + " ID: " + id);
-            if(maxPSNR >= this.quality){
-                //Eliminar tesela
-            }
+            /*if(maxPSNR >= this.quality){*/
+                t.addxCoordDest(xMaxValue);
+                t.addyCoordDest(yMaxValue);
+                System.out.println("ID: " + t.getIdOriginal() + " X: " + t.getxCoordDest(0)+ " Y: " + t.getyCoordDest(0));
+            /*}else{
+                t.addxCoordDest(-1);
+                t.addyCoordDest(-1);
+            }*/
+            /*
+            BufferedImage img=t.getTesela();
+            ImageIcon icon=new ImageIcon(img);
+            JFrame frame=new JFrame();
+            frame.setSize(200,300);
+            JLabel lbl=new JLabel();
+            lbl.setIcon(icon);
+            frame.add(lbl);
+            frame.setVisible(true);
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            
+            BufferedImage img2=pFrame.getSubimage(t.getxCoordDest(0), t.getyCoordDest(0), tileWidth, tileHeight);
+            ImageIcon icon2=new ImageIcon(img2);
+            JFrame frame2=new JFrame();
+            frame2.setSize(200,300);
+            JLabel lbl2=new JLabel();
+            lbl2.setIcon(icon2);
+            frame2.add(lbl2);
+            frame2.setVisible(true);
+            frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
         }
     }
     
-    private float calculatePSNR(BufferedImage iframe, BufferedImage pframe){
+    private float calculatePSNR(Tesela tesela, BufferedImage pframe){
         float noise = 0, mse = 0, psnr = 0;
-        for (int i=0; i<iframe.getHeight(); i++) {
-            for (int j=0; j<iframe.getWidth(); j++) {
-                Color iframe_rgb = new Color(iframe.getRGB(j, i));
+        BufferedImage iFrame = tesela.getTesela();
+        for (int i=0; i<iFrame.getHeight(); i++) {
+            for (int j=0; j<iFrame.getWidth(); j++) {
+                Color iframe_rgb = new Color(iFrame.getRGB(j, i));
                 Color pframe_rgb = new Color(pframe.getRGB(j, i));
                 noise += Math.pow(pframe_rgb.getRed() - iframe_rgb.getRed(), 2);
                 noise += Math.pow(pframe_rgb.getGreen()- iframe_rgb.getGreen(), 2);
                 noise += Math.pow(pframe_rgb.getBlue() - iframe_rgb.getBlue(), 2);
             }
           }
-        mse = noise/(iframe.getHeight()*iframe.getWidth()*3);
+        mse = noise/(iFrame.getHeight()*iFrame.getWidth()*3);
         psnr = (float) (10 * Math.log10((255 * 255) / mse));
         return psnr;
-    }
-    
-    private ArrayList<Integer> calculateRangePositions(int[][] matrix, int id){
-        ArrayList<Integer> positions = new ArrayList<>();
-        int size = matrix[0].length;
-        int i = (int) Math.ceil(id/size);
-        int j = id%size;
-        int value = matrix[i][j];
-        if(value == id){
-            int minX = i-this.seekRange;
-            int maxX = i+this.seekRange;
-            int minY = j-this.seekRange;
-            int maxY = j+this.seekRange;
-            for(int row=minX; row<=maxX; row++){
-                if(row >= 0 && row < size){
-                    for(int col=minY; col<=maxY; col++){
-                        if(col >= 0 && col < size){
-                            if(!positions.contains(matrix[row][col])) positions.add(matrix[row][col]);
-                        }
-                    }
-                }
-            }
-        }
-        Collections.sort(positions);
-        return positions;
-    }
-    
-    private int[][] generateMatrix(){
-        int[][] matrix = new int[this.nTiles][this.nTiles];
-        int count=0;
-        for (int row=0; row < matrix.length; row++){
-            for (int col=0; col < matrix[row].length; col++){
-                matrix[row][col] = count;
-                count++;
-            }
-        }
-        return matrix;
     }
 }

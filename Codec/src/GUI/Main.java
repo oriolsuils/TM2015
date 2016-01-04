@@ -37,8 +37,8 @@ public class Main {
                 raw_images = zipHandler.readZip(parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());
                 Encoder encoder = new Encoder(raw_images, parser.getnTiles(), parser.getQuality(), parser.getGop(), parser.getSeekRange());
                 encoder.encode();
-                ArrayList<BufferedImage> generateMacroblocks = encoder.generateMacroblocks(raw_images.get(0));
-                Visor v = new Visor(generateMacroblocks, parser.getFps(), parser.isDebug(), parser.isBatch());
+                //ArrayList<BufferedImage> generateMacroblocks = encoder.generateMacroblocks(raw_images.get(0));
+                //Visor v = new Visor(generateMacroblocks, parser.getFps(), parser.isDebug(), parser.isBatch());
                 //new Thread(v).start();
             } 
         } catch (ParameterException pe){
