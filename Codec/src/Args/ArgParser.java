@@ -61,7 +61,7 @@ public class ArgParser {
     
     @Parameter(names = "--seekRange",
             description = "The averaging filter")
-    private int seekRange = 5;
+    private int seekRange = 2;
     
     @Parameter(names = "--GOP",
             description = "The averaging filter")

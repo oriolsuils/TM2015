@@ -14,7 +14,8 @@ import javax.swing.JLabel;
  */
 public class Encoder {
     private ArrayList<BufferedImage> raw_images;
-    private ArrayList<BufferedImage> cod_images;
+    private ArrayList<Frame> frames;
+//private ArrayList<BufferedImage> cod_images;
     private int nTiles;
     private float quality;
     private int gop;
@@ -26,19 +27,28 @@ public class Encoder {
         this.quality = quality;
         this.gop = gop;
         this.seekRange = seekRange;
+        this.frames = new ArrayList<>();
     }
     
     public void encode(){
-        ArrayList<Tesela> iFrame = null;
         int gopCount = this.gop;
+        Frame f = null;
         for (BufferedImage frame : raw_images) {
             if(gopCount == this.gop){ //Es pren la referencia (I-Frame) i es generen les teseles
-                iFrame = generateMacroblocks(frame);
+                f = new Frame(frame);
+                f.setTeseles(generateMacroblocks(frame));
             }else{
-                findCompatibleBlock(frame, iFrame);
+                ArrayList<Tesela> findCompatibleBlock = findCompatibleBlock(frame, f.getTeseles());
+                System.out.println("ID: " + frames.size());
+                /*for(Tesela t : findCompatibleBlock){
+                    System.out.println("ID: "+t.getIdOriginal()+" X: " +t.getxCoordDest(t.getIdOriginal())+" Y: " +t.getyCoordDest(t.getIdOriginal()));
+                }*/
             }
             gopCount--;
-            if(gopCount == 0) gopCount = this.gop;
+            if(gopCount == 0){
+                gopCount = this.gop;
+                frames.add(f);
+            }
         }
     }
     
@@ -58,8 +68,7 @@ public class Encoder {
         return teseles;
     }
 
-    private void findCompatibleBlock(BufferedImage pFrame, ArrayList<Tesela> iFrame) {
-        this.seekRange = 3;
+    private ArrayList<Tesela> findCompatibleBlock(BufferedImage pFrame, ArrayList<Tesela> iFrame) {
         for (Tesela t : iFrame) {
             float maxPSNR = Float.MIN_VALUE;
             int xMaxValue = 0, yMaxValue = 0;
@@ -89,35 +98,16 @@ public class Encoder {
                     }
                 }
             }
-            /*if(maxPSNR >= this.quality){*/
+            if(maxPSNR >= this.quality){
                 t.addxCoordDest(xMaxValue);
                 t.addyCoordDest(yMaxValue);
-                System.out.println("ID: " + t.getIdOriginal() + " X: " + t.getxCoordDest(0)+ " Y: " + t.getyCoordDest(0));
-            /*}else{
+                //System.out.println("ID: " + t.getIdOriginal() + " X: " + t.getxCoordDest(0)+ " Y: " + t.getyCoordDest(0));
+            }else{
                 t.addxCoordDest(-1);
                 t.addyCoordDest(-1);
-            }*/
-            /*
-            BufferedImage img=t.getTesela();
-            ImageIcon icon=new ImageIcon(img);
-            JFrame frame=new JFrame();
-            frame.setSize(200,300);
-            JLabel lbl=new JLabel();
-            lbl.setIcon(icon);
-            frame.add(lbl);
-            frame.setVisible(true);
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            
-            BufferedImage img2=pFrame.getSubimage(t.getxCoordDest(0), t.getyCoordDest(0), tileWidth, tileHeight);
-            ImageIcon icon2=new ImageIcon(img2);
-            JFrame frame2=new JFrame();
-            frame2.setSize(200,300);
-            JLabel lbl2=new JLabel();
-            lbl2.setIcon(icon2);
-            frame2.add(lbl2);
-            frame2.setVisible(true);
-            frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
+            }
         }
+        return iFrame;
     }
     
     private float calculatePSNR(Tesela tesela, BufferedImage pframe){
