@@ -38,8 +38,7 @@ public class Encoder {
                 f = new Frame(frame);
                 f.setTeseles(generateMacroblocks(frame));
             }else{
-                ArrayList<Tesela> findCompatibleBlock = findCompatibleBlock(frame, f.getTeseles());
-                System.out.println("ID: " + frames.size());
+                findCompatibleBlock(f, frame);
                 /*for(Tesela t : findCompatibleBlock){
                     System.out.println("ID: "+t.getIdOriginal()+" X: " +t.getxCoordDest(t.getIdOriginal())+" Y: " +t.getyCoordDest(t.getIdOriginal()));
                 }*/
@@ -58,8 +57,8 @@ public class Encoder {
         int tileHeight = image.getHeight()/this.nTiles;
         Tesela t;
         int count = 0;
-        for(int x=0; x<image.getWidth(); x+=tileWidth){
-            for(int y=0; y<image.getHeight(); y+=tileHeight){
+        for(int y=0; y<image.getHeight(); y+=tileHeight){
+            for(int x=0; x<image.getWidth(); x+=tileWidth){
                 t = new Tesela(image.getSubimage(x, y, tileWidth, tileHeight), count);
                 teseles.add(t);
                 count++;
@@ -68,46 +67,51 @@ public class Encoder {
         return teseles;
     }
 
-    private ArrayList<Tesela> findCompatibleBlock(BufferedImage pFrame, ArrayList<Tesela> iFrame) {
-        for (Tesela t : iFrame) {
-            float maxPSNR = Float.MIN_VALUE;
-            int xMaxValue = 0, yMaxValue = 0;
-            int tileWidth = pFrame.getWidth()/this.nTiles;
-            int tileHeight = pFrame.getHeight()/this.nTiles;
-            int xOriginal = (int) Math.ceil(t.getIdOriginal()/this.nTiles);            
-            int yOriginal = t.getIdOriginal()%this.nTiles;
-            int xMin = xOriginal - (this.seekRange); 
-            int xMax = xOriginal + ((this.seekRange+1)); 
-            int yMin = yOriginal - (this.seekRange); 
-            int yMax = yOriginal + ((this.seekRange+1)); 
-            if(xMin < 0) xMin = 0;
-            if(yMin < 0) yMin = 0;
-            if(xMax > this.nTiles) xMax = this.nTiles;
-            if(yMax > this.nTiles) yMax = this.nTiles;
-            xMin *= tileWidth;
-            xMax *= tileWidth;
-            yMin *= tileHeight;
-            yMax *= tileHeight;
+    private void findCompatibleBlock(Frame iFrame, BufferedImage pFrame) {
+        float maxPSNR = Float.MIN_VALUE;
+        int xMaxValue = 0, yMaxValue = 0, xMin, xMax, yMin, yMax, idTesela, idX, idY;
+        int tileWidth = pFrame.getWidth()/this.nTiles;
+        int tileHeight = pFrame.getHeight()/this.nTiles;
+        ArrayList<Tesela> teselesResultants = new ArrayList<>();
+        for (Tesela t : iFrame.getTeseles()) {
+            idTesela = t.getIdOriginal();
+            System.out.println("TESELA: " + idTesela);
+            if(((int)(Math.ceil(idTesela/this.nTiles)) == 0)){
+                //System.out.println("["+(idTesela%this.nTiles)+","+((int)Math.ceil(idTesela/this.nTiles))+"]");
+                idX = (idTesela%this.nTiles);
+                idY = ((int)Math.ceil(idTesela/this.nTiles));
+            } else{
+                //System.out.println("["+((int)Math.ceil(idTesela/this.nTiles))+","+(idTesela%this.nTiles)+"]");
+                idX = ((int)Math.ceil(idTesela/this.nTiles));
+                idY = (idTesela%this.nTiles);
+            }
+            xMin = (((idX - this.seekRange) * tileWidth) < 0) ? 0 : ((idX - (this.seekRange)) * tileWidth);
+            yMin = (((idY - this.seekRange) * tileHeight) < 0) ? 0 : (idY - (this.seekRange) * tileHeight);
+            xMax = (((idX + (this.seekRange+1)) * tileWidth) > (this.nTiles * tileWidth)) ? (this.nTiles * tileWidth) : ((idX + (this.seekRange+1)) * tileWidth);
+            yMax = (((idY + (this.seekRange+1)) * tileHeight) > (this.nTiles * tileHeight)) ? (this.nTiles * tileHeight) : ((idY + (this.seekRange+1)) * tileHeight);
+            int count = 0;
             for(int x=xMin; x<(xMax-tileWidth); x++){
                 for(int y=yMin; y<(yMax-tileHeight); y++){
                     float psnr = calculatePSNR(t, pFrame.getSubimage(x, y, tileWidth, tileHeight));
-                    if(psnr > maxPSNR){
+                    if(psnr > maxPSNR && psnr >= this.quality){
                         maxPSNR = psnr;
                         xMaxValue = x;
                         yMaxValue = y;
                     }
+                    count++;
                 }
             }
-            if(maxPSNR >= this.quality){
+            System.out.println("COUNT: " + count);
+            if(maxPSNR != Float.MIN_VALUE){
                 t.addxCoordDest(xMaxValue);
                 t.addyCoordDest(yMaxValue);
-                //System.out.println("ID: " + t.getIdOriginal() + " X: " + t.getxCoordDest(0)+ " Y: " + t.getyCoordDest(0));
             }else{
                 t.addxCoordDest(-1);
                 t.addyCoordDest(-1);
             }
+            teselesResultants.add(t);
         }
-        return iFrame;
+        iFrame.setTeseles(teselesResultants);
     }
     
     private float calculatePSNR(Tesela tesela, BufferedImage pframe){
