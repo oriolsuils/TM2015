@@ -67,16 +67,18 @@ public class Encoder {
         int i=0; 
         Frame next = null;
         Frame anterior = null;
-        while(i<(this.raw_images.size()-1)) {
+        while(i<this.raw_images.size()) {
             anterior = new Frame(this.raw_images.get(i));
-            next = new Frame(this.raw_images.get(i+1));
-            anterior.setTeseles(generateMacroblocks(anterior.getImage()));
-            next = findCompatibleBlock(anterior, next.getImage());
-            Frame resultant = new Frame(setPFramesColor(anterior.getTeseles(), next.getImage()));
-            if(gopCount == this.gop){ //Es pren la referencia (I-Frame) i es generen les teseles
+            if((i+1) == this.raw_images.size()){
                 compressed_images.add(anterior);
-                compressed_images.add(resultant);
-            }else{
+            } else {
+                next = new Frame(this.raw_images.get(i+1));
+                anterior.setTeseles(generateMacroblocks(anterior.getImage()));
+                next = findCompatibleBlock(anterior, next.getImage());
+                Frame resultant = new Frame(setPFramesColor(anterior.getTeseles(), next.getImage()));
+                if(gopCount == this.gop){
+                    compressed_images.add(anterior);
+                }
                 compressed_images.add(resultant);
             }
             gopCount--;
@@ -86,11 +88,10 @@ public class Encoder {
             }else{
                 for(Tesela t : anterior.getTeseles()) this.allTiles.add(t);
             }
-            anterior = next;
             i++;
-            //System.out.println("FRAME: " + gopCount);
         }
         System.out.println("FORAAAA: " + this.allTiles.size());
+        System.out.println("IMAGES SIZE: " + this.compressed_images.size());
         this.saveZIP();
     }
     

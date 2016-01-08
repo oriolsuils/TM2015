@@ -37,7 +37,7 @@ public class Main {
                 ZipHandler zipHandler = new ZipHandler(parser.getInputZip(), parser.getOutputZip(), parser.isDebug());
                 ArrayList<BufferedImage> raw_images = zipHandler.readAndSaveImages(parser.getInputZip(), parser.getOutputZip(), parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());
                 Visor v = new Visor(raw_images, parser.getFps(), parser.isDebug(), parser.isBatch());
-                new Thread(v).start();
+                //new Thread(v).start();
                 raw_images = zipHandler.readZip(parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());
                 if(parser.isEncode() && parser.isDecode()){
                     Encoder encoder = new Encoder(raw_images, parser.getnTiles(), parser.getQuality(), parser.getGop(), parser.getSeekRange());
