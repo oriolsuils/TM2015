@@ -10,11 +10,15 @@ import com.beust.jcommander.ParameterException;
 import java.io.File;
 
 /**
- *
- * @author mat.aules
+ * This class checks if a file exists
+ * @author Oriol i Pol
  */
 public class FileExists implements IParameterValidator{
-
+    /**
+     * This overrided method validates the file
+     * @param name
+     * @param value 
+     */
     @Override
     public void validate(String name, String value) {
         File f = new File(value);

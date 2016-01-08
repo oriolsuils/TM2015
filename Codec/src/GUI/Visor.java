@@ -13,6 +13,10 @@ import javax.swing.JPanel;
 import javax.swing.JLabel;
 import javax.swing.WindowConstants;
 
+/**
+ * This is the visor class
+ * @author Oriol i Pol
+ */
 public class Visor extends JFrame implements Runnable{
 
     private JPanel contentPane;
@@ -24,7 +28,13 @@ public class Visor extends JFrame implements Runnable{
     private int count;
     private boolean debug;
     private boolean batch;
-
+    /**
+     * Construct
+     * @param images
+     * @param fps
+     * @param debug
+     * @param batch 
+     */
     public Visor(ArrayList<BufferedImage> images, int fps, boolean debug, boolean batch) {
         this.fps = fps;
         this.images = images;
@@ -33,7 +43,9 @@ public class Visor extends JFrame implements Runnable{
         this.debug = debug;
         this.batch = batch;
     }
-    
+    /**
+     * This method initializate the components
+     */
     private void initComponents() {
         Dimension imDimension = new Dimension(this.images.get(0).getWidth()+20, this.images.get(0).getHeight()+45);
         this.setSize(imDimension);
@@ -46,7 +58,10 @@ public class Visor extends JFrame implements Runnable{
         this.setContentPane(this.contentPane);
         this.setVisible(true);
     }
-
+    /**
+     * This is the Play method
+     * @param batch 
+     */
     public void play(boolean batch) {
         if(debug) System.out.println("Begins the display of images");
         if(!batch) initComponents();
@@ -59,7 +74,9 @@ public class Visor extends JFrame implements Runnable{
             }
         }
     }
-
+    /**
+     * Run
+     */
     @Override
     public void run() {
         this.play(this.batch);

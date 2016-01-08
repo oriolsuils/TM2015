@@ -8,13 +8,13 @@ package Args;
 import com.beust.jcommander.Parameter;
 
 /**
- *
- * @author mat.aules
+ * This class sets the args for the command lines
+ * @author Oriol i Pol
  */
 public class ArgParser {
     @Parameter(names = {"--help", "-h"},
-            description = "Prints this help message", 
-            help=true)
+            description = "Prints this help message",
+            help = false)
     public boolean help;
     
     @Parameter(names = "--debug",

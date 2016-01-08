@@ -21,12 +21,14 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 
 /**
- *
- * @author Oriol
+ * This is the encoder class
+ * @author Oriol i Pol
  */
 public class Encoder {
     private ArrayList<BufferedImage> raw_images;
-    private ArrayList<Frame> frames;
+    //private ArrayList<Frame> frames;
+    private ArrayList<Frame> compressed_images;
+    private ArrayList<Tesela> allTiles;
     private int nTiles;
     private float quality;
     private int gop;
@@ -34,39 +36,69 @@ public class Encoder {
     private int tileWidth;
     private int tileHeight;
 
+    /**
+     * Construct
+     * @param raw_images
+     * @param nTiles
+     * @param quality
+     * @param gop
+     * @param seekRange 
+     */
     public Encoder(ArrayList<BufferedImage> raw_images, int nTiles, float quality, int gop, int seekRange) {
         this.raw_images = raw_images;
         this.nTiles = nTiles;
         this.quality = quality;
         this.gop = gop;
         this.seekRange = seekRange;
-        this.frames = new ArrayList<>();
+        //this.frames = new ArrayList<>();
+        this.compressed_images = new ArrayList<>();
+        this.allTiles = new ArrayList<>();
         this.tileWidth = this.raw_images.get(0).getWidth()/this.nTiles;
         this.tileHeight = this.raw_images.get(0).getHeight()/this.nTiles;
     }
     
+    /**
+     * This method is the GOP cicle, and call other methods to
+     * take the first image as an I-frame to generate the tiles. The next 
+     * images are taken as P-frames.
+     */
     public void encode(){
         int gopCount = this.gop;
-        int count = 0;
-        Frame f = null;
-        for (BufferedImage frame : raw_images) {
+        int i=0; 
+        Frame next = null;
+        Frame anterior = null;
+        while(i<(this.raw_images.size()-1)) {
+            anterior = new Frame(this.raw_images.get(i));
+            next = new Frame(this.raw_images.get(i+1));
+            anterior.setTeseles(generateMacroblocks(anterior.getImage()));
+            next = findCompatibleBlock(anterior, next.getImage());
+            Frame resultant = new Frame(setPFramesColor(anterior.getTeseles(), next.getImage()));
             if(gopCount == this.gop){ //Es pren la referencia (I-Frame) i es generen les teseles
-                f = new Frame(frame);
-                f.setTeseles(generateMacroblocks(frame));
-                frames.add(f);
+                compressed_images.add(anterior);
+                compressed_images.add(resultant);
             }else{
-                f = findCompatibleBlock(f, frame);
-                setPFramesColor(count, ((this.gop-gopCount)-1), f.getTeseles(), frame);
+                compressed_images.add(resultant);
             }
             gopCount--;
             if(gopCount == 0){
                 gopCount = this.gop;
-                count++;
-                this.saveZIP();
+                i++;
+            }else{
+                for(Tesela t : anterior.getTeseles()) this.allTiles.add(t);
             }
+            anterior = next;
+            i++;
+            //System.out.println("FRAME: " + gopCount);
         }
+        System.out.println("FORAAAA: " + this.allTiles.size());
+        this.saveZIP();
     }
     
+    /**
+     * This method generate the tiles of a given image.
+     * @param image 
+     * @return teseles
+     */
     public ArrayList<Tesela> generateMacroblocks(BufferedImage image){
         ArrayList<Tesela> teseles = new ArrayList<>();
         Tesela t;
@@ -81,27 +113,33 @@ public class Encoder {
         return teseles;
     }
 
+    /**
+     * This method search every tile from I-frame in the seekrange P-frame. If
+     * it's found and pass the quality, then the method save the coordinates 
+     * where the tile was found in P-frame.
+     * @param iFrame
+     * @param pFrame
+     * @return iFrame
+     */
     private Frame findCompatibleBlock(Frame iFrame, BufferedImage pFrame) {
         float maxPSNR = Float.MIN_VALUE;
         int xMaxValue = 0, yMaxValue = 0, xMin, xMax, yMin, yMax, idTesela, idX, idY;
         ArrayList<Tesela> teselesResultants = new ArrayList<>();
         for (Tesela t : iFrame.getTeseles()) {
-            //System.out.println("TESELA: " + t.getIdOriginal());
             maxPSNR = Float.MIN_VALUE;
             idTesela = t.getIdOriginal();
-            if(((int)(Math.ceil(idTesela/this.nTiles)) == 0)){
-                idY = (idTesela%this.nTiles);
-                idX = ((int)Math.ceil(idTesela/this.nTiles));
-            } else{
-                idY = ((int)Math.ceil(idTesela/this.nTiles));
-                idX = (idTesela%this.nTiles);
-            }
-            xMin = (((idX - this.seekRange) * this.tileHeight) < 0) ? 0 : ((idX - this.seekRange) * this.tileHeight);
-            yMin = (((idY - this.seekRange) * this.tileWidth) < 0) ? 0 : ((idY - this.seekRange) * this.tileWidth);
-            xMax = (((idX + (this.seekRange+1)) * this.tileHeight) > (this.nTiles * this.tileHeight)) ? (this.nTiles * this.tileHeight) : ((idX + (this.seekRange+1)) * this.tileHeight);
-            yMax = (((idY + (this.seekRange+1)) * this.tileWidth) > (this.nTiles * this.tileWidth)) ? (this.nTiles * this.tileWidth) : ((idY + (this.seekRange+1)) * this.tileWidth);
-            for(int x=xMin; x<(xMax-this.tileHeight); x++){
+            idY = (idTesela%this.nTiles)*this.tileHeight;
+            idX = ((int)Math.ceil(idTesela/this.nTiles))*this.tileWidth;
+            xMin = ((idX - this.seekRange) < 0) ? 0 : (idX - this.seekRange);
+            yMin = ((idY - this.seekRange) < 0) ? 0 : (idY - this.seekRange);
+            xMax = (idX + this.seekRange + this.tileHeight) > (this.raw_images.get(0).getHeight()) ? (this.raw_images.get(0).getHeight()) : (idX + this.seekRange + this.tileHeight);
+            yMax = (idY + this.seekRange + this.tileWidth) > (this.raw_images.get(0).getWidth()) ? (this.raw_images.get(0).getWidth()) : (idY + this.seekRange + this.tileWidth);
+            /*System.out.println("X: " + xMin +" Y:" + yMin);
+            System.out.println("X: " + xMax +" Y:" + yMax);
+            System.out.println("========================");
+            */for(int x=xMin; x<(xMax-this.tileHeight); x++){
                 for(int y=yMin; y<(yMax-this.tileWidth); y++){
+                    //System.out.println("X: " + x +" Y:" + y);
                     float psnr = calculatePSNR(t, pFrame.getSubimage(y, x, this.tileWidth, this.tileHeight));
                     if(psnr > maxPSNR && psnr >= this.quality){
                         maxPSNR = psnr;
@@ -111,11 +149,11 @@ public class Encoder {
                 }
             }
             if(maxPSNR != Float.MIN_VALUE){
-                t.addxCoordDest(xMaxValue);
-                t.addyCoordDest(yMaxValue);
+                t.setxCoordDest(xMaxValue);
+                t.setyCoordDest(yMaxValue);
             }else{
-                t.addxCoordDest(-1);
-                t.addyCoordDest(-1);
+                t.setxCoordDest(-1);
+                t.setyCoordDest(-1);
             }
             //System.out.println("diff:"+maxPSNR+"  "+xMaxValue+"  "+yMaxValue);
             teselesResultants.add(t);
@@ -124,6 +162,13 @@ public class Encoder {
         return iFrame;
     }
     
+    /**
+     * This method compare two tiles. The bigger is the psnr, the similar are 
+     * the tiles.
+     * @param tesela
+     * @param pframe
+     * @return psnr
+     */
     private float calculatePSNR(Tesela tesela, BufferedImage pframe){
         float noise = 0, mse = 0, psnr = 0;
         BufferedImage iFrame = tesela.getTesela();
@@ -141,21 +186,30 @@ public class Encoder {
         return psnr;
     }
     
-    private void setPFramesColor(int framesId, int coordId, ArrayList<Tesela> teseles, BufferedImage pFrame){
+    /**
+     * This method call the meanColorImage for every I-frame tile found in P-frame.
+     * @param framesId
+     * @param coordId
+     * @param teseles
+     * @param pFrame 
+     */
+    private BufferedImage setPFramesColor(ArrayList<Tesela> teseles, BufferedImage pFrame){
+        BufferedImage result = pFrame;
         for(Tesela t : teseles){
-            int x = t.getxCoordDest(coordId);
-            int y = t.getyCoordDest(coordId);
+            int x = t.getxCoordDest();
+            int y = t.getyCoordDest();
             if(x != -1 && y != -1){
                 Color c = meanColorImage(t.getTesela());
                 for(int xCoord=x; xCoord<(x+this.tileHeight); xCoord++){
                     for(int yCoord=y; yCoord<(y+this.tileWidth); yCoord++){
-                        pFrame.setRGB(yCoord, xCoord, c.getRGB());
+                        result.setRGB(yCoord, xCoord, c.getRGB());
                     }
                 }
             }
         }
-        this.frames.get(framesId).addpFrame(pFrame);
-        
+        return result;
+        //this.frames.get(framesId).addpFrame(pFrame);
+ /*       
         ImageIcon icon=new ImageIcon(pFrame);
         JFrame frame2=new JFrame();
         frame2.setLayout(new FlowLayout());
@@ -164,9 +218,14 @@ public class Encoder {
         lbl.setIcon(icon);
         frame2.add(lbl);
         frame2.setVisible(true);
-        frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
     }
     
+    /**
+     * This method calculates the mean colour from a given tile
+     * @param im
+     * @return Color
+     */
     private Color meanColorImage(BufferedImage im){
         Color color;
         int sumR=0, sumG=0, sumB=0, pixelCount=0;
@@ -182,14 +241,17 @@ public class Encoder {
         return new Color((sumR/pixelCount),(sumG/pixelCount),(sumB/pixelCount));
     }
     
+    /**
+     * This method save every compressed image
+     */
     private void saveCompressedImages(){
         int count=0;
-        for(Frame f : this.frames){
+        for(Frame f : this.compressed_images){
             try {
-                ImageIO.write(f.getImage(), "jpeg", new File("src/resources/Compressed/iframe"+count+".jpeg"));
+                ImageIO.write(f.getImage(), "jpeg", new File("src/resources/Compressed/frame"+String.format("%03d",count)+".jpeg"));
                 count++;
                 for(BufferedImage im : f.getpFrames()){
-                    ImageIO.write(im, "jpeg", new File("src/resources/Compressed/pframe"+count+".jpeg"));
+                    ImageIO.write(im, "jpeg", new File("src/resources/Compressed/frame"+String.format("%03d",count)+".jpeg"));
                     count++;
                 }
             } catch (IOException ex) {
@@ -197,27 +259,29 @@ public class Encoder {
             }
         }
     }
-        
+    
+    /**
+     * This method creates a zip folder with the compressed images and a
+     * text file with the coordinates.
+     */
     private void saveZIP(){
-        new File("src/resources/Compressed").mkdir();
+        new File("src/resources/Compressed").mkdirs();
         this.makeCoordsFile();
         this.saveCompressedImages();
         this.zipFolder("src/resources/Compressed","src/resources/Compressed.zip");
         this.deleteDir(new File("src/resources/Compressed"));
     }
     
+    /**
+     * This method creates a text file with the tiles coordinates in P-frame
+     */
     private void makeCoordsFile(){
         BufferedWriter bw = null;  
         try {
             String name = "src/resources/Compressed/coords.txt";
             bw = new BufferedWriter(new FileWriter(name));
-            for (Frame frame : this.frames) {
-                for (int i=0; i<frame.getpFrames().size(); i++) {
-                    for(int j=0; j<frame.getTeseles().size(); j++){
-                        ArrayList<Tesela> teseles = frame.getTeseles();
-                        bw.write(j+" "+teseles.get(j).getxCoordDest(i)+" "+teseles.get(j).getyCoordDest(i)+"\n");  
-                    }
-                }
+            for (Tesela t : this.allTiles) {
+                bw.write(t.getIdOriginal()+" "+t.getxCoordDest()+" "+t.getyCoordDest()+"\n");  
             }
             bw.flush();
             bw.close();
@@ -232,6 +296,11 @@ public class Encoder {
         }
     }
     
+    /**
+     * This method creates the zip folder
+     * @param srcFolder
+     * @param destZipFile 
+     */
     private void zipFolder(String srcFolder, String destZipFile){
         try {
             ZipOutputStream zip = null;
@@ -250,6 +319,12 @@ public class Encoder {
         }
     }
    
+    /**
+     * This is a support method
+     * @param path
+     * @param srcFile
+     * @param zip 
+     */
     private void addFileToZip(String path, String srcFile, ZipOutputStream zip){
         File folder = new File(srcFile);
         if (folder.isDirectory()) {
@@ -277,6 +352,12 @@ public class Encoder {
         }
   }
    
+    /**
+     * This is a support method
+     * @param path
+     * @param srcFolder
+     * @param zip 
+     */
     private void addFolderToZip(String path, String srcFolder, ZipOutputStream zip){
         File folder = new File(srcFolder);
         for (String fileName : folder.list()) {
@@ -288,6 +369,11 @@ public class Encoder {
         }
     }
    
+    /**
+     * This method deletes the directory
+     * @param dir
+     * @return 
+     */
     private boolean deleteDir(File dir) {
       if (dir.isDirectory()) {
          String[] children = dir.list();

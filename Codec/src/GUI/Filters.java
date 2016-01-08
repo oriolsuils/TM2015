@@ -12,11 +12,16 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.Kernel;
 
 /**
- *
- * @author osuilspe7.alumnes
+ * This class sets the filters
+ * @author Oriol i Pol
  */
 public class Filters {
-    
+    /**
+     * This method binarizate an image
+     * @param image
+     * @param threshold
+     * @return imageFiltered
+     */
     public static BufferedImage binarization(BufferedImage image, float threshold){
         int r, g, b;
         BufferedImage imageFiltered = new BufferedImage(image.getColorModel(), image.copyData(null), image.isAlphaPremultiplied(), null);
@@ -35,7 +40,11 @@ public class Filters {
         }
         return imageFiltered;
     }
-    
+    /**
+     * This methods turns an image to negative
+     * @param image
+     * @return imageFiltered
+     */
     public static BufferedImage negative(BufferedImage image){
         int r, g, b;
         BufferedImage imageFiltered = new BufferedImage(image.getColorModel(), image.copyData(null), image.isAlphaPremultiplied(), null);
@@ -50,7 +59,12 @@ public class Filters {
         }
         return imageFiltered;
     }
-    
+    /**
+     * This method turns an image to an averaged image
+     * @param image
+     * @param size
+     * @return imageFiltered
+     */
     public static BufferedImage averaging(BufferedImage image, int size){
         int numFilter = size*size;
         float[] filter = new float[numFilter];

@@ -8,8 +8,8 @@ package GUI;
 import java.util.TimerTask;
 
 /**
- *
- * @author Oriol
+ * This class sets the timer
+ * @author Oriol i Pol
  */
 public class ChangeImage extends TimerTask{
     private int count;
@@ -17,6 +17,12 @@ public class ChangeImage extends TimerTask{
     private FPSCounter fpsCounter;
     private boolean debug;
 
+    /**
+     * Construct
+     * @param count
+     * @param size
+     * @param debug 
+     */
     public ChangeImage(int count, int size, boolean debug) {
         this.count = count;
         this.size = size;
@@ -24,14 +30,25 @@ public class ChangeImage extends TimerTask{
         this.fpsCounter = new FPSCounter();
     }
 
+    /**
+     * Get Count
+     * @return count
+     */
     public int getCount() {
         return count;
     }
 
+    /**
+     * Get FPS counter
+     * @return fpsCounter
+     */
     public FPSCounter getFpsCounter() {
         return fpsCounter;
     }
 
+    /**
+     * Run
+     */
     @Override
     public void run() {
         this.fpsCounter.timeStamp();

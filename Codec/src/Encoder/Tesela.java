@@ -9,56 +9,89 @@ import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
 /**
- *
+ * This class represents a tile
  * @author Pol i Oriol 
  */
 public class Tesela {
     private int idOriginal;
-    private ArrayList<Integer> xCoordDest;
-    private ArrayList<Integer> yCoordDest;
+    private int xCoordDest;
+    private int yCoordDest;
     private BufferedImage tesela;
-
+    private int x;
+    private int y;
+    
+    /**
+     * Construct
+     * @param tesela
+     * @param idOriginal 
+     */
     public Tesela(BufferedImage tesela, int idOriginal) {
         this.idOriginal = idOriginal;
         this.tesela = tesela;
-        this.xCoordDest = new ArrayList<>();
-        this.yCoordDest = new ArrayList<>();
     }
 
+    /**
+     * Get I-frame ID
+     * @return idOriginal
+     */
     public int getIdOriginal() {
         return idOriginal;
     }
 
-    public int getxCoordDest(int idx) {
-        return xCoordDest.get(idx);
-    }
-
-    public int getyCoordDest(int idx) {
-        return yCoordDest.get(idx);
-    }
-
-    public ArrayList<Integer> getxCoordDest() {
+    /**
+     * Get P-frames X coordinates array
+     * @return xCoordDest
+     */
+    public int getxCoordDest() {
         return xCoordDest;
     }
 
-    public ArrayList<Integer> getyCoordDest() {
+    /**
+     * Get P-frames Y coordinates array
+     * @return yCoordDest
+     */
+    public int getyCoordDest() {
         return yCoordDest;
     }
 
+    /**
+     * Set I-frame id
+     * @param idOriginal 
+     */
     public void setIdOriginal(int idOriginal) {
         this.idOriginal = idOriginal;
     }
-
-    public void addxCoordDest(int xCoordDest) {
-        this.xCoordDest.add(xCoordDest);
-    }
-
-    public void addyCoordDest(int yCoordDest) {
-        this.yCoordDest.add(yCoordDest);
-    }
-
+    
+    /**
+     * Get tile
+     * @return tesela
+     */
     public BufferedImage getTesela() {
         return tesela;
+    }
+
+    public void setxCoordDest(int xCoordDest) {
+        this.xCoordDest = xCoordDest;
+    }
+
+    public void setyCoordDest(int yCoordDest) {
+        this.yCoordDest = yCoordDest;
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public void setY(int y) {
+        this.y = y;
     }
     
 }

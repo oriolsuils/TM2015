@@ -17,8 +17,8 @@ import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
 
 /**
- *
- * @author Oriol
+ * This class is to save zips
+ * @author Oriol i Pol
  */
 public class ZipHandler {
     private ZipOutputStream out;
@@ -26,14 +26,25 @@ public class ZipHandler {
     private String inputZipName;
     private String outputZipName;
     private boolean debug;
-
+    /**
+     * Construct
+     * @param inputZipName
+     * @param outputZipName
+     * @param debug 
+     */
     public ZipHandler(String inputZipName, String outputZipName, boolean debug) {
         this.count = 0;
         this.inputZipName = inputZipName;
         this.outputZipName = outputZipName;
         this.debug = debug;
     }
-        
+    /**
+     * Read zip
+     * @param binarization
+     * @param negative
+     * @param averaging
+     * @return images
+     */ 
     public ArrayList<BufferedImage> readZip(float binarization, boolean negative, int averaging) {
         if(this.debug) System.out.print("Reading the ZIP...");
         ArrayList<BufferedImage> images = new ArrayList<>();
@@ -82,7 +93,9 @@ public class ZipHandler {
         }
         return images;
     }
-    
+    /**
+     * This method initializate the zip
+     */
     private void initZip() {
         try {
             if(out == null) out = new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(this.outputZipName, true)));
@@ -91,7 +104,10 @@ public class ZipHandler {
             this.closeStream();
         }
     }
-    
+    /**
+     * This method writes a zip
+     * @param images 
+     */
     private void writeZip(ArrayList<BufferedImage> images) {
         if(this.debug) System.out.print("Writing the ZIP...");
         initZip();
@@ -109,28 +125,46 @@ public class ZipHandler {
         if(this.debug) System.out.println(" Writing completed");
         this.closeStream();
     } 
-
+    /**
+     * This method validate the image extension
+     * @param name
+     * @return extension
+     */
     private boolean validateImageExtension(String name) {
         String substring = name.substring(name.lastIndexOf(".")+1,name.length());
         return (substring.equalsIgnoreCase("png") || substring.equalsIgnoreCase("jpeg") || substring.equalsIgnoreCase("jpg") || substring.equalsIgnoreCase("gif") || substring.equalsIgnoreCase("bmp"));
     }
-    
+    /**
+     * Get Input Zip Name
+     * @return inputZipName 
+     */
     public String getInputZipName() {
         return inputZipName;
     }
-
+    /**
+     * Get Output Zip Name
+     * @return outputZipName
+     */
     public String getOutputZipName() {
         return outputZipName;
     }
-
+    /**
+     * Set input zip name
+     * @param inputZipName 
+     */
     public void setInputZipName(String inputZipName) {
         this.inputZipName = inputZipName;
     }
-
+    /**
+     * Set output zip name
+     * @param outputZipName 
+     */
     public void setOutputZipName(String outputZipName) {
         this.outputZipName = outputZipName;
     }
-
+    /**
+     * This method closes the stream
+     */
     private void closeStream() {
         try {
             out.flush();
@@ -139,7 +173,15 @@ public class ZipHandler {
             System.out.println("ERROR: There has been a problem while closing the connection");
         }
     }
-
+    /**
+     * This method read and save the images
+     * @param inputZip
+     * @param outputZip
+     * @param binarization
+     * @param negative
+     * @param averaging
+     * @return images
+     */
     public ArrayList<BufferedImage> readAndSaveImages(String inputZip, String outputZip, float binarization, boolean negative, int averaging) {
         ArrayList<BufferedImage> images = this.readZip(binarization, negative, averaging); 
         this.writeZip(images);
