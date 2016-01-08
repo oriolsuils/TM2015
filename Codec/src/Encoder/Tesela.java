@@ -37,6 +37,14 @@ public class Tesela {
         return yCoordDest.get(idx);
     }
 
+    public ArrayList<Integer> getxCoordDest() {
+        return xCoordDest;
+    }
+
+    public ArrayList<Integer> getyCoordDest() {
+        return yCoordDest;
+    }
+
     public void setIdOriginal(int idOriginal) {
         this.idOriginal = idOriginal;
     }

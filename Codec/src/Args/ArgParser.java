@@ -69,7 +69,7 @@ public class ArgParser {
     
     @Parameter(names = "--quality",
             description = "The averaging filter")
-    private float quality = 30;
+    private float quality = 20;
     
     @Parameter(names = {"--batch", "-b"},
             description = " ")

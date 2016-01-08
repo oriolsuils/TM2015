@@ -34,4 +34,12 @@ public class Frame {
         this.pFrames = pFrames;
     }
     
+    public void addpFrame(BufferedImage image){
+        this.pFrames.add(image);
+    }
+
+    public BufferedImage getImage() {
+        return image;
+    }
+    
 }
