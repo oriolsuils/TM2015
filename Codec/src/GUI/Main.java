@@ -8,6 +8,7 @@ package GUI;
 import Args.ArgParser;
 import Encoder.Decoder;
 import Encoder.Encoder;
+import Encoder.Frame;
 import ZipHandler.ZipHandler;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
@@ -35,7 +36,7 @@ public class Main {
                 if(parser.isDebug()) System.out.println("Debug mode: " + parser.isDebug());
                 if(parser.isDebug()) System.out.println("Working with file: " + parser.getInputZip());
                 ZipHandler zipHandler = new ZipHandler(parser.getInputZip(), parser.getOutputZip(), parser.isDebug());
-                ArrayList<BufferedImage> raw_images = zipHandler.readAndSaveImages(parser.getInputZip(), parser.getOutputZip(), parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());
+                ArrayList<Frame> raw_images = zipHandler.readAndSaveImages(parser.getInputZip(), parser.getOutputZip(), parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());
                 Visor v = new Visor(raw_images, parser.getFps(), parser.isDebug(), parser.isBatch());
                 //new Thread(v).start();
                 raw_images = zipHandler.readZip(parser.getBinarization(), parser.isNegative(), (int) parser.getAveraging());

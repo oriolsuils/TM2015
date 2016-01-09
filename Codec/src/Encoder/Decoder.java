@@ -128,14 +128,5 @@ public class Decoder {
                 }
             }
         }
-        /*ImageIcon icon=new ImageIcon(pframe);
-        JFrame frame2=new JFrame();
-        frame2.setLayout(new FlowLayout());
-        frame2.setSize(300,400);
-        JLabel lbl=new JLabel();
-        lbl.setIcon(icon);
-        frame2.add(lbl);
-        frame2.setVisible(true);
-        frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
     }
 }

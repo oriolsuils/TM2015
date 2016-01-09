@@ -1,5 +1,6 @@
 package GUI;
 
+import Encoder.Frame;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.Image;
@@ -22,7 +23,7 @@ public class Visor extends JFrame implements Runnable{
     private JPanel contentPane;
     private JLabel lblImageHolder;
     
-    private ArrayList<BufferedImage> images;
+    private ArrayList<Frame> images;
     private int fps;
     private Timer timer;
     private int count;
@@ -35,7 +36,7 @@ public class Visor extends JFrame implements Runnable{
      * @param debug
      * @param batch 
      */
-    public Visor(ArrayList<BufferedImage> images, int fps, boolean debug, boolean batch) {
+    public Visor(ArrayList<Frame> images, int fps, boolean debug, boolean batch) {
         this.fps = fps;
         this.images = images;
         this.timer = new Timer();
@@ -47,7 +48,7 @@ public class Visor extends JFrame implements Runnable{
      * This method initializate the components
      */
     private void initComponents() {
-        Dimension imDimension = new Dimension(this.images.get(0).getWidth()+20, this.images.get(0).getHeight()+45);
+        Dimension imDimension = new Dimension(this.images.get(0).getImage().getWidth()+20, this.images.get(0).getImage().getHeight()+45);
         this.setSize(imDimension);
         this.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         this.contentPane = new JPanel();
@@ -69,8 +70,8 @@ public class Visor extends JFrame implements Runnable{
         this.timer.scheduleAtFixedRate(ci, 0, (long) 1000./(long) fps);
         while(true){
             if(!batch) {
-                this.contentPane.setSize(this.images.get(0).getWidth()+20, this.images.get(0).getHeight()+45);
-                this.lblImageHolder.setIcon(new ImageIcon((Image) this.images.get(ci.getCount())));
+                this.contentPane.setSize(this.images.get(0).getImage().getWidth()+20, this.images.get(0).getImage().getHeight()+45);
+                this.lblImageHolder.setIcon(new ImageIcon((Image) this.images.get(ci.getCount()).getImage()));
             }
         }
     }

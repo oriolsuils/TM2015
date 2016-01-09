@@ -1,6 +1,7 @@
 package ZipHandler;
 
 import Encoder.Encoder;
+import Encoder.Frame;
 import GUI.Filters;
 import java.awt.image.BufferedImage;
 import java.io.BufferedOutputStream;
@@ -45,9 +46,9 @@ public class ZipHandler {
      * @param averaging
      * @return images
      */ 
-    public ArrayList<BufferedImage> readZip(float binarization, boolean negative, int averaging) {
+    public ArrayList<Frame> readZip(float binarization, boolean negative, int averaging) {
         if(this.debug) System.out.print("Reading the ZIP...");
-        ArrayList<BufferedImage> images = new ArrayList<>();
+        ArrayList<Frame> images = new ArrayList<>();
         ZipFile zf = null;
         try{
             zf = new ZipFile(new File(this.inputZipName));
@@ -70,15 +71,20 @@ public class ZipHandler {
                 System.err.println("ERROR: There has been a problem while initializing the output stream");
             }
             BufferedImage image = null;
+            Frame f = null;
             try {
+                String id = entry.getName().substring(entry.getName().indexOf(".")-2,entry.getName().indexOf("."));
                 image = ImageIO.read(is);
+                f = new Frame(image, Integer.valueOf(id));
             } catch (IOException ex) {
                 System.err.println("ERROR: There has been a problem while reading the image");
             }
             if(binarization > 0.0) image = Filters.binarization(image, binarization);
             if(negative) image = Filters.negative(image);
             if(averaging > 0) image = Filters.averaging(image, averaging);
-            images.add(image);
+            f.setImage(image);
+            images.add(f);
+            //images.add(image);
         }
         try {
             zf.close();
@@ -108,14 +114,14 @@ public class ZipHandler {
      * This method writes a zip
      * @param images 
      */
-    private void writeZip(ArrayList<BufferedImage> images) {
+    private void writeZip(ArrayList<Frame> images) {
         if(this.debug) System.out.print("Writing the ZIP...");
         initZip();
-        for (BufferedImage image : images) {
-            ZipEntry entry = new ZipEntry("image"+count+".jpg");
+        for (Frame image : images) {
+            ZipEntry entry = new ZipEntry("image"+image.getId()+".jpg");
             try {
                 out.putNextEntry(entry);
-                ImageIO.write(image, "jpg", out);
+                ImageIO.write(image.getImage(), "jpg", out);
             } catch (IOException ex) {
                 System.out.println("ERROR: There has been a problem while writing the image to the output file");
                 this.closeStream();
@@ -182,8 +188,8 @@ public class ZipHandler {
      * @param averaging
      * @return images
      */
-    public ArrayList<BufferedImage> readAndSaveImages(String inputZip, String outputZip, float binarization, boolean negative, int averaging) {
-        ArrayList<BufferedImage> images = this.readZip(binarization, negative, averaging); 
+    public ArrayList<Frame> readAndSaveImages(String inputZip, String outputZip, float binarization, boolean negative, int averaging) {
+        ArrayList<Frame> images = this.readZip(binarization, negative, averaging); 
         this.writeZip(images);
         return images;
     }

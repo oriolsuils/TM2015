@@ -1,7 +1,6 @@
 package Encoder;
 
 import java.awt.Color;
-import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -11,22 +10,20 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
 
 /**
  * This is the encoder class
  * @author Oriol i Pol
  */
 public class Encoder {
-    private ArrayList<BufferedImage> raw_images;
-    //private ArrayList<Frame> frames;
+    private ArrayList<Frame> raw_images;
     private ArrayList<Frame> compressed_images;
     private ArrayList<Tesela> allTiles;
     private int nTiles;
@@ -44,17 +41,16 @@ public class Encoder {
      * @param gop
      * @param seekRange 
      */
-    public Encoder(ArrayList<BufferedImage> raw_images, int nTiles, float quality, int gop, int seekRange) {
+    public Encoder(ArrayList<Frame> raw_images, int nTiles, float quality, int gop, int seekRange) {
         this.raw_images = raw_images;
         this.nTiles = nTiles;
         this.quality = quality;
         this.gop = gop;
         this.seekRange = seekRange;
-        //this.frames = new ArrayList<>();
         this.compressed_images = new ArrayList<>();
         this.allTiles = new ArrayList<>();
-        this.tileWidth = this.raw_images.get(0).getWidth()/this.nTiles;
-        this.tileHeight = this.raw_images.get(0).getHeight()/this.nTiles;
+        this.tileWidth = this.raw_images.get(0).getImage().getWidth()/this.nTiles;
+        this.tileHeight = this.raw_images.get(0).getImage().getHeight()/this.nTiles;
     }
     
     /**
@@ -67,15 +63,21 @@ public class Encoder {
         int i=0; 
         Frame next = null;
         Frame anterior = null;
+        Collections.sort(this.raw_images, new Comparator<Frame>(){
+            @Override
+            public int compare(Frame o1, Frame o2) {
+                return (o1.getId()>o2.getId() ? (o1.getId()==o2.getId() ? 0 : 1) : -1);
+            }
+         });
         while(i<this.raw_images.size()) {
-            anterior = new Frame(this.raw_images.get(i));
+            anterior = this.raw_images.get(i);
             if((i+1) == this.raw_images.size()){
                 compressed_images.add(anterior);
             } else {
-                next = new Frame(this.raw_images.get(i+1));
+                next = this.raw_images.get(i+1);
                 anterior.setTeseles(generateMacroblocks(anterior.getImage()));
-                next = findCompatibleBlock(anterior, next.getImage());
-                Frame resultant = new Frame(setPFramesColor(anterior.getTeseles(), next.getImage()));
+                anterior.setTeseles(findCompatibleBlock(anterior, next.getImage()));
+                Frame resultant = new Frame(setPFramesColor(anterior.getTeseles(), next.getImage()),5);
                 if(gopCount == this.gop){
                     compressed_images.add(anterior);
                 }
@@ -83,6 +85,7 @@ public class Encoder {
             }
             gopCount--;
             if(gopCount == 0){
+                System.out.println("NEW IFRAME");
                 gopCount = this.gop;
                 i++;
             }else{
@@ -122,25 +125,21 @@ public class Encoder {
      * @param pFrame
      * @return iFrame
      */
-    private Frame findCompatibleBlock(Frame iFrame, BufferedImage pFrame) {
+    private ArrayList<Tesela> findCompatibleBlock(Frame iFrame, BufferedImage pFrame) {
         float maxPSNR = Float.MIN_VALUE;
         int xMaxValue = 0, yMaxValue = 0, xMin, xMax, yMin, yMax, idTesela, idX, idY;
         ArrayList<Tesela> teselesResultants = new ArrayList<>();
         for (Tesela t : iFrame.getTeseles()) {
             maxPSNR = Float.MIN_VALUE;
             idTesela = t.getIdOriginal();
-            idY = (idTesela%this.nTiles)*this.tileHeight;
-            idX = ((int)Math.ceil(idTesela/this.nTiles))*this.tileWidth;
+            idY = (idTesela%this.nTiles)*this.tileWidth;
+            idX = ((int)Math.ceil(idTesela/this.nTiles))*this.tileHeight;
             xMin = ((idX - this.seekRange) < 0) ? 0 : (idX - this.seekRange);
             yMin = ((idY - this.seekRange) < 0) ? 0 : (idY - this.seekRange);
-            xMax = (idX + this.seekRange + this.tileHeight) > (this.raw_images.get(0).getHeight()) ? (this.raw_images.get(0).getHeight()) : (idX + this.seekRange + this.tileHeight);
-            yMax = (idY + this.seekRange + this.tileWidth) > (this.raw_images.get(0).getWidth()) ? (this.raw_images.get(0).getWidth()) : (idY + this.seekRange + this.tileWidth);
-            /*System.out.println("X: " + xMin +" Y:" + yMin);
-            System.out.println("X: " + xMax +" Y:" + yMax);
-            System.out.println("========================");
-            */for(int x=xMin; x<(xMax-this.tileHeight); x++){
-                for(int y=yMin; y<(yMax-this.tileWidth); y++){
-                    //System.out.println("X: " + x +" Y:" + y);
+            xMax = (idX + this.seekRange + this.tileHeight) > (this.raw_images.get(0).getImage().getHeight()) ? (this.raw_images.get(0).getImage().getHeight()) : (idX + this.seekRange + this.tileHeight);
+            yMax = (idY + this.seekRange + this.tileWidth) > (this.raw_images.get(0).getImage().getWidth()) ? (this.raw_images.get(0).getImage().getWidth()) : (idY + this.seekRange + this.tileWidth);
+            for(int x=xMin; x<=xMax-this.tileHeight; x++){
+                for(int y=yMin; y<=yMax-this.tileWidth; y++){
                     float psnr = calculatePSNR(t, pFrame.getSubimage(y, x, this.tileWidth, this.tileHeight));
                     if(psnr > maxPSNR && psnr >= this.quality){
                         maxPSNR = psnr;
@@ -156,11 +155,9 @@ public class Encoder {
                 t.setxCoordDest(-1);
                 t.setyCoordDest(-1);
             }
-            //System.out.println("diff:"+maxPSNR+"  "+xMaxValue+"  "+yMaxValue);
             teselesResultants.add(t);
         }
-        iFrame.setTeseles(teselesResultants);
-        return iFrame;
+        return(teselesResultants);
     }
     
     /**
@@ -209,17 +206,6 @@ public class Encoder {
             }
         }
         return result;
-        //this.frames.get(framesId).addpFrame(pFrame);
- /*       
-        ImageIcon icon=new ImageIcon(pFrame);
-        JFrame frame2=new JFrame();
-        frame2.setLayout(new FlowLayout());
-        frame2.setSize(300,400);
-        JLabel lbl=new JLabel();
-        lbl.setIcon(icon);
-        frame2.add(lbl);
-        frame2.setVisible(true);
-        frame2.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);*/
     }
     
     /**
@@ -246,14 +232,11 @@ public class Encoder {
      * This method save every compressed image
      */
     private void saveCompressedImages(){
-        int count=0;
-        for(Frame f : this.compressed_images){
+        for(Frame f : this.raw_images){
             try {
-                ImageIO.write(f.getImage(), "jpeg", new File("src/resources/Compressed/frame"+String.format("%03d",count)+".jpeg"));
-                count++;
+                ImageIO.write(f.getImage(), "jpeg", new File("src/resources/Compressed/frame"+String.format("%03d",f.getId())+".jpeg"));
                 for(BufferedImage im : f.getpFrames()){
-                    ImageIO.write(im, "jpeg", new File("src/resources/Compressed/frame"+String.format("%03d",count)+".jpeg"));
-                    count++;
+                    ImageIO.write(im, "jpeg", new File("src/resources/Compressed/frame"+String.format("%03d",f.getId())+".jpeg"));
                 }
             } catch (IOException ex) {
                 ex.printStackTrace();
@@ -267,7 +250,7 @@ public class Encoder {
      */
     private void saveZIP(){
         new File("src/resources/Compressed").mkdirs();
-        this.makeCoordsFile();
+        //this.makeCoordsFile();
         this.saveCompressedImages();
         this.zipFolder("src/resources/Compressed","src/resources/Compressed.zip");
         this.deleteDir(new File("src/resources/Compressed"));
